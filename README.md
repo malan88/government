@@ -25,4 +25,10 @@ AH, THAT'S SIMPLE: I'm not dealing with multiple parties, always two choices.
 
 Whichever choice's threshold is closer to theirs, that's who they choose.
 
-That's perfect
+That's perfect.
+
+Correction: I am dealing with multiple parties if I have a parliamentary system,
+etc. I should really get more familiar with how voting systems result in how
+many parties. It would be cool to simulate the proliferation of parties. Problem
+is I'm doing a linear gradient instead of a two dimensional (or
+multi-dimensional) political compass. I should eventually implement that.
