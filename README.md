@@ -49,3 +49,12 @@ I wonder if these positions should be gaussian. That would make sense, I imagine
 people's politics are some distribution other than uniform.
 
 How do you reach polarization?
+
+Up down votes on single items (Laws) is going to be determined by a compromise
+factor.
+
+First determine the distance between the position of the law and the position of
+the voter.
+
+If the absolute value of the distance is greater than the compromise factor, the
+voter votes against it.
