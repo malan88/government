@@ -44,3 +44,8 @@ d(p,q) = sqrt( (p1-q1)**2 + (p2-q2)**2 + ... + (pn-qn)**2 )
 Which would be an easy way to simulate multidimensional political space of
 arbitrary complexity. Up down votes on issues rather than choices mean that a
 voted-upon item needs mutlidimensional complexity as well.
+
+I wonder if these positions should be gaussian. That would make sense, I imagine
+people's politics are some distribution other than uniform.
+
+How do you reach polarization?
