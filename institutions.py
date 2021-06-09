@@ -1,14 +1,53 @@
+import math
+from numpy.random import normal as norm
 import random as r
 
+
+DIMENSIONS = 2
+STDDEV = 0.1
+CENTER = 0.5
+
+def get_random():
+    return r.choice(norm(loc=CENTER, scale=STDDEV, size=100))
+
+def create_position():
+    return (get_random() for i in range(DIMENSIONS))
+
+def compare(p, q):
+    square = 0
+    for pn, qn in zip(p,q):
+        square += (pn-qn)**2
+    return math.sqrt(square)
+
+
+class Law:
+    def __init__(self, rule, position):
+        self.rule = rule
+        self.position = position
+
+
 class Voter:
-    def __init__(self, threshold=None):
-        self.threshold = r.random() if not threshold else threshold
+    def __init__(self, position=position):
+        self.position = get_random() if not position else position
 
     def __repr__(self):
-        return '<Voter {}>'.format(self.threshold)
+        return '<Voter {}>'.format(self.position)
 
-    def vote(self):
-        return r.random() > self.threshold
+    def vote(self, law):
+        # need to figure this one out, probably my side of the distribution with
+        # some wiggle
+        pass
+
+    def choose(self, choices):
+        smallest = 1000000000
+        closest = None
+        for choice in choices:
+            val = compare(self.position, choice.position)
+            if val < smallest:
+                closest = choice
+                smallest = val
+            return closest
+
 
 class Body:
     def __init__(self, name, members, threshold=None):
