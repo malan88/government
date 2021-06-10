@@ -1,5 +1,5 @@
 import math
-from numpy.random import normal as norm, multinomial
+from numpy.random import normal as norm, multinomial, pareto
 from more_itertools import split_into
 import random as r
 
@@ -7,8 +7,13 @@ N = 7
 STDDEV = 0.1
 CENTER = 0.5
 
-RPOOL = norm(loc=CENTER, scale=STDDEV, size=10000)
-RPOOL.sort()
+NORMPOOL = norm(loc=CENTER, scale=STDDEV, size=10000)
+NORMPOOL.sort()
+
+PARETOSHAPE = 1
+
+PARETOPOOL = pareto(PARETOSHAPE, 10000)
+PARETOPOOL.sort()
 
 
 # helper function
@@ -19,7 +24,7 @@ def get_random():
     """Normal distribution from 0 to 1 with STDEV standard deviation from
     CENTER.
     """
-    return r.choice(RPOOL)
+    return r.choice(NORMPOOL)
 
 
 def create_position():
@@ -43,8 +48,10 @@ def create_compromise(position):
 
 
 def create_constituencies(x, m):
-    min_size = (len(x) / m) / m
-    constituencies = multinomial(len(x) - m * min_size, [1/m] * m)
+    min_size = 2
+    #distribution =  [clamp(r.choice(PARETOPOOL) )for _ in range(m)]
+    distribution = [1/m] * m
+    constituencies = multinomial(len(x) - m * min_size, distribution)
     constituencies = [int(const_size + min_size) for const_size in constituencies]
     return list(split_into(x, constituencies))
 
@@ -80,6 +87,9 @@ class Voter:
         """To choose a voter finds the closest choice to themselves."""
         return min(distance(self.position, choice.position) for choice in choices)
 
+class Position:
+    pass
+
 
 class Body:
     """A body is a distinct governing body that contains members.
@@ -93,8 +103,8 @@ class Body:
     threshold: integer, the number of bodies above which positive votes must
                reach to pass
     """
+    # bodies need the Positions and Positions need constituencies.
     def __init__(self, name, members, threshold=None):
-        """Takes """
         if isinstance(members, int):
             self.members = [Voter() for _ in range(members)]
         elif isinstance(members[0], int):
