@@ -1,8 +1,9 @@
 import math
-from numpy.random import normal as norm
+from numpy.random import normal as norm, multinomial
+from more_itertools import split_into
 import random as r
 
-N = 2
+N = 7
 STDDEV = 0.1
 CENTER = 0.5
 
@@ -23,16 +24,7 @@ def get_random():
 
 def create_position():
     """A position is a tuple of N dimensions between 0 and 1"""
-    return (clamp(get_random()) for i in range(N))
-
-
-def create_compromise(position):
-    """Compromise is the compliment of the distance between the voter and the
-    origin. This signals polarization. The more radical the voter, the less
-    compromising they are.
-    """
-    return clamp(1-distance((0)*N, position))
-
+    return list(clamp(get_random()) for i in range(N))
 
 def distance(p, q):
     """Finds the distance between two positions in N-dimensional space."""
@@ -40,6 +32,21 @@ def distance(p, q):
     for pn, qn in zip(p,q):
         square += (pn-qn)**2
     return math.sqrt(square)
+
+
+def create_compromise(position):
+    """Compromise is the compliment of the distance between the voter and the
+    origin. This signals polarization. The more radical the voter, the less
+    compromising they are.
+    """
+    return clamp(1-distance([0]*N, position))
+
+
+def create_constituencies(x, m):
+    min_size = (len(x) / m) / m
+    constituencies = multinomial(len(x) - m * min_size, [1/m] * m)
+    constituencies = [int(const_size + min_size) for const_size in constituencies]
+    return list(split_into(x, constituencies))
 
 
 class Law:
@@ -71,7 +78,7 @@ class Voter:
 
     def choose(self, choices):
         """To choose a voter finds the closest choice to themselves."""
-        return min(distance(self.position, choice.position for choice in choices))
+        return min(distance(self.position, choice.position) for choice in choices)
 
 
 class Body:
