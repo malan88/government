@@ -1,13 +1,30 @@
-import random as r
+from random import randint
 from institutions import *
 
 def main():
     # 4 bodies:
     #   1. People
-    people = Body('People', r.randint(10000,100000))
-    states = create_constituencies(people.members, 50)
+    people = [Voter() for _ in range(randint(10000,100000))]
+
     #   2. Congress: House, Senate
+    states = create_constituencies(people, 50)
+    size_of_districts = [len(state)/len(people)*435 for state in states]
+    difference = 435 - sum(size_of_districts)
+
+    while difference != 0:
+        direction = -1 if difference > 0 else 1
+        size_of_districts[difference] += direction
+        difference += direction
+
+    districts = []
+    for district, state in zip(size_of_districts, states):
+        districts.extend(create_constituencies(state, district))
+
+    senate = Body('Senate', states*2, threshold=60)
+    house = Body('House', districts)
+    congress = MultiBody('Congress', [senate, house])
     #   3. President
+
     #   4. SCOTUS
 
     # President to be chosen by people from people

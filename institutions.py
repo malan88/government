@@ -31,6 +31,7 @@ def create_position():
     """A position is a tuple of N dimensions between 0 and 1"""
     return list(clamp(get_random()) for i in range(N))
 
+
 def distance(p, q):
     """Finds the distance between two positions in N-dimensional space."""
     square = 0
@@ -87,8 +88,22 @@ class Voter:
         """To choose a voter finds the closest choice to themselves."""
         return min(distance(self.position, choice.position) for choice in choices)
 
-class Position:
-    pass
+
+class Office:
+    def __init__(self, constituency):
+        self.constituency = constituency
+
+    def elect(self, candidates):
+        votes = {choice:0 for choice in candidates}
+        for member in self.constituency:
+            votes[member.choose(candidates)] += 1
+        self.occupant = max(votes, key=votes.get)
+
+    def vote(self, law):
+        return self.occupant.vote(law)
+
+    def choose(self, choices):
+        return self.occupant.choose(choices)
 
 
 class Body:
@@ -104,18 +119,13 @@ class Body:
                reach to pass
     """
     # bodies need the Positions and Positions need constituencies.
-    def __init__(self, name, members, threshold=None):
-        if isinstance(members, int):
-            self.members = [Voter() for _ in range(members)]
-        elif isinstance(members[0], int):
-            self.members = [Voter(m) for m in members]
-        elif isinstance(members[0], Voter):
-            self.members = members
-        else:
-            raise TypeError("Required: members (int, [(int*N)], or [Voter])")
+    def __init__(self, name, constituencies, threshold=None, cycles=3):
         self.name = name
-        self.threshold = (int(len(self.members)/2) if threshold is not None
+        self.offices = [Office(constituency) for constituency in constituencies]
+        self.threshold = (int(len(self.offices)/2) if threshold is None
                           else threshold)
+        self.cycles = 3
+        self.current_cycle = 1
 
     def __repr__(self):
         return '<Body {} of {} members>'.format(self.name, len(self.members))
@@ -124,12 +134,12 @@ class Body:
         """To vote, a body simply finds if the yeas are greater than their
         threshold.
         """
-        return sum(m.vote(law) for m in self.members) > self.threshold
+        return sum(m.vote(law) for m in self.offices) > self.threshold
 
     def choose(self, choices):
         """Choice is simply a plurality for a body."""
         votes = {choice:0 for choice in choices}
-        for member in self.members:
+        for member in self.offices:
             votes[member.choose(choices)] += 1
         return max(votes, key=votes.get)
 
