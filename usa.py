@@ -1,12 +1,27 @@
 from random import randint, choice
 from institutions import *
 
+def get_president(size_of_districts, states, people, incumbent=None):
+    ec = [size+2 for size in size_of_districts]
+    if incumbent:
+        candidates = {incumbent: 0, choice(people):0}
+    else:
+        candidates = {choice(people):0 for _ in range(2)}
+    for votes, state in zip(ec, states):
+        constituency = Constituency(state)
+        candidates[constituency.choose(candidates)] += votes
+    president = max(candidates, key=candidates.get)
+    if not hasattr(president, 'term'):
+        president.term = 1
+    else:
+        president.term += 1
+    return president
+
 def main():
-    # 4 bodies:
-    #   1. People
+    passed, rejected = [], []
+
     people = [Voter() for _ in range(randint(10000,100000))]
 
-    #   2. Congress: House, Senate
     states = create_constituencies(people, 50)
     size_of_districts = [round(len(state)/len(people)*435) for state in states]
     difference = 435 - sum(size_of_districts)
@@ -21,33 +36,42 @@ def main():
         districts.extend(create_constituencies(state, district))
 
     senate = Body('Senate', states*2, threshold=60, cycles=3)
-    senate.election()
-    senate.election()
-    senate.election()
     house = Body('House', districts)
-    house.election()
 
     congress = MultiBody('Congress', [senate, house])
 
-    #   3. President
-    ec = [size+2 for size in size_of_districts]
-    candidates = {choice(people):0 for _ in range(2)}
-    for votes, state in zip(ec, states):
-        constituency = Constituency(state)
-        candidates[constituency.choose(candidates)] += votes
+    president = get_president(size_of_districts, states, people)
 
-    president = max(candidates, key=candidates.get)
+    session = 100 # session laws
+    sessions = 10 # of sessions
 
-    print(congress, president)
+    for i in range(session * sessions):
+        law = Law(randint(0,10000), create_position())
+        cvote = congress.vote(law)
+        if cvote:
+            pvote = president.vote(law)
+            if not pvote:
+                override = congress.veto_override(law)
+                if override:
+                    passed.append(law)
+                else:
+                    rejected.append(law)
+            else:
+                passed.append(law)
 
+        if not i % session:
+            print("Midterm", i / session)
+            congress.election()
 
-    #   4. SCOTUS
+        if not i % (session * 2):
+            print("Presidential election")
+            if president.term < 2:
+                president = get_president(size_of_districts, states, people, president)
+            else:
+                president = get_president(size_of_districts, states, people)
 
-    # President to be chosen by people from people
-    # Senate to be chosen by states from states
-    # House to be chosen by districts from districts
-    # SCOTUS to be chosen by President
-
+    print(len(passed), len(rejected))
+    print('Conservatism:', len(rejected)/(session * sessions))
 
 if __name__ == '__main__':
     main()

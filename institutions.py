@@ -115,8 +115,8 @@ class Office:
             votes[member.choose(candidates)] += 1
         self.occupant = max(votes, key=votes.get)
 
-    def election(self, candidates=2):
-        candidates = [r.choice(self.constituency) for _ in range(candidates)]
+    def election(self, num=2):
+        candidates = [r.choice(self.constituency) for _ in range(num)]
         return self.elect(candidates)
 
     def vote(self, law):
@@ -138,23 +138,37 @@ class Body:
     threshold: integer, the number of bodies above which positive votes must
                reach to pass
     """
+    @property
+    def population(self):
+        return len(self.offices)
+
     # bodies need the Positions and Positions need constituencies.
     def __init__(self, name, constituencies, threshold=None, cycles=1):
         self.name = name
         self.offices = [Office(constituency) for constituency in constituencies]
         self.threshold = (int(len(self.offices)/2) if threshold is None
                           else threshold)
-        self.cycles = cycles
         self.current_cycle = 0
 
+        self.cycles = 1
+        self.election()
+        self.cycles = cycles
+
+
     def __repr__(self):
-        return '<Body {} of {} members>'.format(self.name, len(self.members))
+        return '<Body {} of {} members>'.format(self.name, len(self.offices))
 
     def vote(self, law):
         """To vote, a body simply finds if the yeas are greater than their
         threshold.
         """
         return sum(m.vote(law) for m in self.offices) > self.threshold
+
+    def vote_tally(self, law):
+        """To vote, a body simply finds if the yeas are greater than their
+        threshold.
+        """
+        return sum(m.vote(law) for m in self.offices)
 
     def choose(self, choices):
         """Choice is simply a plurality for a body."""
@@ -164,10 +178,8 @@ class Body:
         return max(votes, key=votes.get)
 
     def election(self):
-        self.cycles
-        self.current_cycle
         start = round(self.current_cycle/self.cycles * len(self.offices))
-        end = start + round(self.current_cycle/self.cycles)
+        end = start + round(1/self.cycles * len(self.offices))
         for o in self.offices[start:end]:
             o.election()
         self.current_cycle += 1
@@ -184,12 +196,22 @@ class MultiBody:
         self.name = name
         self.threshold = len(self.bodies) if threshold is None else threshold
 
-    def vote(self):
+    def __repr__(self):
+        return f'<{self.name} {self.bodies.keys()}>'
+
+    def vote(self, law):
         """To vote, a multi-body simply finds if the body-yeas are greater than
         it's threshold.
         """
-        votes = [b.vote() for b in self.bodies.values()]
+        votes = [b.vote(law) for b in self.bodies.values()]
         return sum(votes) >= self.threshold
 
-    def __repr__(self):
-        return f'<{self.name} {self.bodies.keys()}>'
+    def veto_override(self, law, threshold=2/3):
+        for house in self.bodies:
+            if house.vote_tally(law)/house.population < threshold:
+                return False
+        return True
+
+    def election(self):
+        for b in self.bodies.values():
+            b.election()
