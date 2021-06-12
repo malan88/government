@@ -1,11 +1,12 @@
 import math
 from numpy.random import normal as norm, multinomial, pareto
+import numpy as np
 from more_itertools import split_into
 import random as r
 
 N = 7
 STDDEV = 0.1
-CENTER = 0.5
+CENTER = 0
 
 NORMPOOL = norm(loc=CENTER, scale=STDDEV, size=10000)
 NORMPOOL.sort()
@@ -17,14 +18,16 @@ PARETOPOOL.sort()
 
 
 # helper function
-def clamp(num): return max(min(num, 1.0), 0.0)
+def clamp(num): return max(min(num, 1.0), -1.0)
 
 
-def get_random():
-    """Normal distribution from 0 to 1 with STDEV standard deviation from
+def get_random(distribution='normal'):
+    """Normal distribution from 0 to 1 with STDDEV standard deviation from
     CENTER.
     """
-    return r.choice(NORMPOOL)
+    if distribution == 'normal':
+        return norm(CENTER, STDDEV, 1)
+    return None
 
 
 def create_position():
@@ -99,6 +102,10 @@ class Office:
             votes[member.choose(candidates)] += 1
         self.occupant = max(votes, key=votes.get)
 
+    def election(self, candidates=2):
+        candidates = [choice(self.constituency) for _ in range(candidates)]
+        return self.elect(candidates)
+
     def vote(self, law):
         return self.occupant.vote(law)
 
@@ -119,13 +126,13 @@ class Body:
                reach to pass
     """
     # bodies need the Positions and Positions need constituencies.
-    def __init__(self, name, constituencies, threshold=None, cycles=3):
+    def __init__(self, name, constituencies, threshold=None, cycles=1):
         self.name = name
         self.offices = [Office(constituency) for constituency in constituencies]
         self.threshold = (int(len(self.offices)/2) if threshold is None
                           else threshold)
-        self.cycles = 3
-        self.current_cycle = 1
+        self.cycles = cycles
+        self.current_cycle = 0
 
     def __repr__(self):
         return '<Body {} of {} members>'.format(self.name, len(self.members))
@@ -142,6 +149,16 @@ class Body:
         for member in self.offices:
             votes[member.choose(choices)] += 1
         return max(votes, key=votes.get)
+
+    def election(self):
+        self.cycles
+        self.current_cycle
+        start = round(self.current_cycle/self.cycles * len(self.offices))
+        end = start + round(self.current_cycle/self.cycles)
+        for o in self.offices[start:end]:
+            o.election()
+        self.current_cycle += 1
+        self.current_cycle %= self.cycles
 
 
 class MultiBody:

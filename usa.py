@@ -8,7 +8,7 @@ def main():
 
     #   2. Congress: House, Senate
     states = create_constituencies(people, 50)
-    size_of_districts = [len(state)/len(people)*435 for state in states]
+    size_of_districts = [round(len(state)/len(people)*435) for state in states]
     difference = 435 - sum(size_of_districts)
 
     while difference != 0:
@@ -20,10 +20,18 @@ def main():
     for district, state in zip(size_of_districts, states):
         districts.extend(create_constituencies(state, district))
 
-    senate = Body('Senate', states*2, threshold=60)
+    senate = Body('Senate', states*2, threshold=60, cycles=3)
+    senate.election()
+    senate.election()
+    senate.election()
     house = Body('House', districts)
+    house.election()
+
     congress = MultiBody('Congress', [senate, house])
+
     #   3. President
+    ec = [size+2 for size in size_of_districts]
+    candidates = [choice(people) for _ in range(2)]
 
     #   4. SCOTUS
 
