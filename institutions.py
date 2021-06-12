@@ -89,7 +89,20 @@ class Voter:
 
     def choose(self, choices):
         """To choose a voter finds the closest choice to themselves."""
-        return min(distance(self.position, choice.position) for choice in choices)
+        choices = {choice: distance(self.position, choice.position) for choice in choices}
+        return min(choices, key=choices.get)
+
+
+class Constituency:
+    def __init__(self, bodypolitic):
+        self.constituency = bodypolitic
+
+    def choose(self, choices):
+        """Choice is simply a plurality for a body."""
+        votes = {choice:0 for choice in choices}
+        for member in self.constituency:
+            votes[member.choose(choices)] += 1
+        return max(votes, key=votes.get)
 
 
 class Office:
@@ -103,7 +116,7 @@ class Office:
         self.occupant = max(votes, key=votes.get)
 
     def election(self, candidates=2):
-        candidates = [choice(self.constituency) for _ in range(candidates)]
+        candidates = [r.choice(self.constituency) for _ in range(candidates)]
         return self.elect(candidates)
 
     def vote(self, law):
@@ -177,3 +190,6 @@ class MultiBody:
         """
         votes = [b.vote() for b in self.bodies.values()]
         return sum(votes) >= self.threshold
+
+    def __repr__(self):
+        return f'<{self.name} {self.bodies.keys()}>'

@@ -1,4 +1,4 @@
-from random import randint
+from random import randint, choice
 from institutions import *
 
 def main():
@@ -31,7 +31,15 @@ def main():
 
     #   3. President
     ec = [size+2 for size in size_of_districts]
-    candidates = [choice(people) for _ in range(2)]
+    candidates = {choice(people):0 for _ in range(2)}
+    for votes, state in zip(ec, states):
+        constituency = Constituency(state)
+        candidates[constituency.choose(candidates)] += votes
+
+    president = max(candidates, key=candidates.get)
+
+    print(congress, president)
+
 
     #   4. SCOTUS
 
