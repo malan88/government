@@ -1,12 +1,13 @@
 from random import randint, choice
-from institutions import *
+from institutions import (Constituency, Law, Body, MultiBody)
+
 
 def get_president(size_of_districts, states, people, incumbent=None):
     ec = [size+2 for size in size_of_districts]
     if incumbent:
-        candidates = {incumbent: 0, choice(people):0}
+        candidates = {incumbent: 0, choice(people): 0}
     else:
-        candidates = {choice(people):0 for _ in range(2)}
+        candidates = {choice(people): 0 for _ in range(2)}
     for votes, state in zip(ec, states):
         constituency = Constituency(state)
         candidates[constituency.choose(candidates)] += votes
@@ -17,10 +18,11 @@ def get_president(size_of_districts, states, people, incumbent=None):
         president.term += 1
     return president
 
+
 def main():
     passed, rejected = [], []
 
-    people = [Voter() for _ in range(randint(10000,100000))]
+    people = [Voter() for _ in range(randint(10000, 100000))]
 
     states = create_constituencies(people, 50)
     size_of_districts = [round(len(state)/len(people)*435) for state in states]
@@ -42,11 +44,11 @@ def main():
 
     president = get_president(size_of_districts, states, people)
 
-    session = 100 # session laws
-    sessions = 10 # of sessions
+    session = 10  # session laws
+    sessions = 10  # of sessions
 
     for i in range(session * sessions):
-        law = Law(randint(0,10000), create_position())
+        law = Law(randint(0, 10000), create_position())
         cvote = congress.vote(law)
         if cvote:
             pvote = president.vote(law)
@@ -66,12 +68,14 @@ def main():
         if not i % (session * 2):
             print("Presidential election")
             if president.term < 2:
-                president = get_president(size_of_districts, states, people, president)
+                president = get_president(
+                    size_of_districts, states, people, president)
             else:
                 president = get_president(size_of_districts, states, people)
 
     print(len(passed), len(rejected))
     print('Conservatism:', len(rejected)/(session * sessions))
+
 
 if __name__ == '__main__':
     main()
